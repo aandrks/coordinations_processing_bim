@@ -421,7 +421,7 @@ def process_coordinations(df, company_person_map, today_date):
 
 # ========== STREAMLIT (обёртка без изменения логики) ==========
 st.set_page_config(page_title="Координации", layout="wide")
-st.title("📋 Система контроля просроченных согласований")
+st.title("📋 Система контроля просроченных согласований2")
 
 # Инициализируем базу в сессии
 if 'employee_db' not in st.session_state:
