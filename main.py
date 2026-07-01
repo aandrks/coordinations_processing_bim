@@ -443,7 +443,8 @@ if menu == "🏢 Загрузка данных":
         else:
             df = pd.read_excel(uploaded_file, engine='openpyxl')
         # ВАЖНО: твой метод получения строки (без изменений)
-        file_content = '\n'.join(df.astype(str).values.flatten().tolist())
+        file_content = '\n'.join([str(x) for x in df.values.flatten().tolist()])
+
 
         # Находим публичные домены, чтобы запросить компанию
         public_emails = []
