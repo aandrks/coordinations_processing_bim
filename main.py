@@ -398,7 +398,7 @@ def process_coordinations(df, company_person_map, today_date):
 
 # -------------------- STREAMLIT UI --------------------
 st.set_page_config(page_title="Координации", layout="wide")
-st.title("📋 Система контроля просроченных согласований")
+st.title("📋 Система контроля просроченных согласований1")
 
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = load_employee_db()
