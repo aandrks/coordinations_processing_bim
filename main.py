@@ -13,7 +13,7 @@ from rapidfuzz import fuzz
 import openpyxl
 import xlsxwriter
 
-# ========== КОНФИГУРАЦИЯ (твоя, без изменений) ==========
+
 EMPLOYEE_DB_FILE = 'employee_database.json'
 public_domains = {'mail', 'yandex', 'gmail', 'yahoo', 'hotmail', 'outlook'}
 holidays = ['01-01', '02-01', '03-01', '04-01', '05-01', '06-01', '07-01',
@@ -22,7 +22,7 @@ working_holidays = ['01-11']
 SPEC_CONFIG_FILE = 'spec_config.json'
 no_match_array = []
 
-# ========== БАЗА ДАННЫХ (полностью твоя) ==========
+
 def load_employee_db():
     try:
         if Path(EMPLOYEE_DB_FILE).exists():
@@ -42,7 +42,7 @@ def save_employee_db(db):
     except Exception as e:
         st.error(f"Error saving employee database: {e}")
 
-# ========== ТЕКСТ (твой) ==========
+
 def normalize_text(text):
     if not isinstance(text, str):
         return ""
@@ -73,7 +73,7 @@ def extract_name_components(name):
         return parts[-1], parts[0]
     return parts[-1], " ".join(parts[:-1])
 
-# ========== ПАРСИНГ (твой, только input() заменён на параметр) ==========
+
 def parse_company_person_data(file_content, db, public_assignments=None):
     """
     public_assignments: dict {email: company} для публичных доменов.
@@ -91,7 +91,7 @@ def parse_company_person_data(file_content, db, public_assignments=None):
         if not line:
             continue
 
-        # твой приём со склеиванием строк, если заканчивается на /
+        
         if line.endswith('/') and line_num + 1 < len(lines):
             next_line = lines[line_num + 1].strip()
             if next_line:
@@ -123,10 +123,10 @@ def parse_company_person_data(file_content, db, public_assignments=None):
                 normalized_name = normalize_text(name)
 
                 if domain in public_domains:
-                    # Вместо input() – берём из переданного словаря
+                    
                     company = public_assignments.get(email) if public_assignments else None
                     if not company:
-                        continue   # пропускаем, если не назначено
+                        continue   
                     if team_company is None:
                         team_company = company
                         db['companies'].add(company)
@@ -163,11 +163,11 @@ def parse_company_person_data(file_content, db, public_assignments=None):
     save_employee_db(db)
     return db, company_person_map
 
-# ========== ПОИСК (твой) ==========
+
 def find_best_match(target_name, candidates, debug_info=None):
     if debug_info is None:
         debug_info = []
-    # ... весь твой оригинальный код функции, без единого изменения
+    
     debug_info.append(f"    Finding best match for: {target_name}")
     debug_info.append(f"    Candidates: {[c['name'] for c in candidates]}")
     target_surname, target_given = extract_name_components(target_name)
@@ -201,7 +201,7 @@ def find_best_match(target_name, candidates, debug_info=None):
         debug_info.append("    No suitable match found")
     return best_match
 
-# ========== РАСЧЁТ ДАТ (твой) ==========
+
 def add_working_days(start_date, working_days):
     if working_days <= 0:
         return start_date
@@ -285,7 +285,7 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
     matching_log.append(f"    ✗ No team members found in checked list")
     return False
 
-# ========== ОСНОВНАЯ ОБРАБОТКА (твоя, today принимается параметром) ==========
+
 def process_coordinations(df, company_person_map, today_date):
     overdue_counts = defaultdict(int)
     overdue_emails = []
@@ -419,17 +419,17 @@ def process_coordinations(df, company_person_map, today_date):
 
     return overdue_counts, overdue_emails, overdue_coordination_ids, coordination_details, debug_info, ambiguous_matches, matching_log
 
-# ========== STREAMLIT (обёртка без изменения логики) ==========
+
 st.set_page_config(page_title="Координации", layout="wide")
 st.title("📋 Система контроля просроченных согласований2")
 
-# Инициализируем базу в сессии
+
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = load_employee_db()
 
 menu = st.sidebar.radio("Режим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
-# ---------- ЗАГРУЗКА ДАННЫХ ----------
+
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
     db = st.session_state.employee_db
@@ -437,16 +437,16 @@ if menu == "🏢 Загрузка данных":
 
     uploaded_file = st.file_uploader("Файл с сотрудниками (CSV/Excel/TXT)", type=["csv", "xlsx", "txt"])
     if uploaded_file:
-        # Читаем файл ТВОИМ способом
+        
         if uploaded_file.name.endswith('.csv') or uploaded_file.name.endswith('.txt'):
             df = pd.read_csv(uploaded_file, sep=';', encoding='utf-8')
         else:
             df = pd.read_excel(uploaded_file, engine='openpyxl')
-        # ВАЖНО: твой метод получения строки (без изменений)
+        
         file_content = '\n'.join([str(x) for x in df.values.flatten().tolist()])
 
 
-        # Находим публичные домены, чтобы запросить компанию
+        
         public_emails = []
         seen = {e['email'] for e in db['employees']}
         for line in file_content.split('\n'):
@@ -485,14 +485,14 @@ if menu == "🏢 Загрузка данных":
                 st.session_state.employee_db = db
                 st.success(f"Готово! Сотрудников: {len(db['employees'])}")
 
-# ---------- ОБРАБОТКА СОГЛАСОВАНИЙ ----------
+
 elif menu == "📊 Обработка согласований":
     st.header("Просроченные согласования")
     db = st.session_state.employee_db
     if not db['employees']:
         st.error("Сначала загрузите сотрудников")
     else:
-        # Строим company_person_map как в оригинале
+        
         company_person_map = defaultdict(list)
         for emp in db['employees']:
             company_person_map[emp['company']].append({
@@ -518,7 +518,7 @@ elif menu == "📊 Обработка согласований":
                      coordination_details, debug_info, ambiguous_matches,
                      matching_log) = process_coordinations(df, company_person_map, check_date)
 
-                # --- Отчёт по сотрудникам (твоя добавленная часть) ---
+                
                 person_overdue = defaultdict(lambda: {'company': '', 'count': 0, 'overdue_days': []})
                 for d in coordination_details:
                     dd = d['deadline']
@@ -548,7 +548,7 @@ elif menu == "📊 Обработка согласований":
                 st.subheader("По сотрудникам")
                 st.dataframe(df_report, use_container_width=True)
 
-                # Скачивание
+                
                 csv = df_report.to_csv(index=False).encode('utf-8-sig')
                 st.download_button("📥 CSV", csv, "person_overdue_report.csv")
                 output = io.BytesIO()
@@ -559,7 +559,7 @@ elif menu == "📊 Обработка согласований":
                 st.subheader("Детали согласований")
                 st.dataframe(pd.DataFrame(coordination_details), use_container_width=True)
 
-# ---------- ЗАГРУЗКА JSON ----------
+
 elif menu == "📂 Загрузить JSON":
     st.header("Импорт/Экспорт базы")
     uploaded_json = st.file_uploader("Загрузить employee_database.json", type="json")
