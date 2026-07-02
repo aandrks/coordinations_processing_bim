@@ -463,7 +463,7 @@ def process_coordinations(df, company_person_map, today_date):
 
 
 st.set_page_config(page_title="Координации", layout="wide")
-st.title("📋 Система контроля просроченных согласований2")
+# st.title("📋 Система контроля просроченных согласований 2")
 
 
 if 'employee_db' not in st.session_state:
