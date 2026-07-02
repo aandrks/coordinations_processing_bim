@@ -285,6 +285,48 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
     matching_log.append(f"    ✗ No team members found in checked list")
     return False
 
+def generate_company_report(overdue_counts, person_report, overdue_coordination_ids):
+
+    from collections import defaultdict
+
+    
+    companies = defaultdict(lambda: {'total': 0, 'max_days': 0, 'employees': []})
+    for p in person_report:
+        comp = p['Организация']
+        
+        companies[comp]['max_days'] = max(companies[comp]['max_days'], p['Макс. дней'])
+        companies[comp]['employees'].append(p)
+
+    
+    for comp in companies:
+        companies[comp]['total'] = overdue_counts.get(comp, 0)
+
+    
+    sorted_companies = sorted(companies.items(), key=lambda x: x[1]['total'], reverse=True)
+
+    lines = []
+    total_overdue = len(overdue_coordination_ids)
+    lines.append(f"Общее количество просроченных согласований - {total_overdue}")
+    lines.append("")
+
+    for comp, data in sorted_companies:
+        if data['total'] == 0:
+            continue
+        
+        sorted_emps = sorted(data['employees'], key=lambda x: x['Просрочек'], reverse=True)
+        
+        emp_names = ', '.join([e['Сотрудник'] for e in sorted_emps])
+        lines.append(
+            f"Количество просроченных согласований {comp} ({emp_names}) - {data['total']}, "
+            f"макс. срок задержки - {data['max_days']} дня:"
+        )
+        for emp in sorted_emps:
+            
+            lines.append(f"- {emp['Сотрудник']} - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
+        lines.append("")
+
+    return "\n".join(lines)
+
 
 def process_coordinations(df, company_person_map, today_date):
     overdue_counts = defaultdict(int)
@@ -555,6 +597,22 @@ elif menu == "📊 Обработка согласований":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df_report.to_excel(writer, index=False, sheet_name='Отчёт')
                 st.download_button("📥 Excel", output.getvalue(), "person_overdue_report.xlsx")
+
+
+
+                report_text = generate_company_report(overdue_counts, report, overdue_ids)
+                st.subheader("📊 Сводный отчёт по компаниям и сотрудникам")
+                st.code(report_text, language='text')  # или st.text(report_text)
+
+
+                st.download_button(
+                    "📥 Скачать отчёт (TXT)",
+                    report_text,
+                    "overdue_report.txt",
+                    "text/plain"
+                )
+
+
 
                 st.subheader("Детали согласований")
                 st.dataframe(pd.DataFrame(coordination_details), use_container_width=True)
