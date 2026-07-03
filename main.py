@@ -467,7 +467,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 
 
 if 'employee_db' not in st.session_state:
-    st.session_state.employee_db = {'employees': [], 'companies': set()}()
+    st.session_state.employee_db = {'employees': [], 'companies': set()}
 
 menu = st.sidebar.radio("Режим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
