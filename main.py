@@ -604,9 +604,12 @@ elif menu == "📊 Обработка согласований":
                 st.subheader("📊 Сводный отчёт по компаниям и сотрудникам")
                 st.code(report_text, language='text')  # или st.text(report_text)
 
-
-                emails_txt = '\n'.join(sorted(set(overdue_emails)))
-                st.download_button("📥 Скачать список emails", emails_txt, "overdue_emails.txt", "text/plain")
+                if overdue_emails:
+                    emails_txt = '\n'.join(sorted(set(overdue_emails)))
+                    st.download_button("📥 Скачать список Email (overdue_emails.txt)",
+                                       emails_txt, "overdue_emails.txt", "text/plain")
+                    st.subheader("Email адреса просрочивших")
+                    st.code(emails_txt, language='text')
 
 
                 st.download_button(
