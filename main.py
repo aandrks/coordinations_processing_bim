@@ -386,7 +386,7 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
 
             # пункт 5: переключатель утро/вечер
             if day_period == 'утро':
-                if deadline.date() > today_date:
+                if deadline.date() >= today_date:
                     debug_info.append({
                         'id': coord_id,
                         'status': 'Not overdue',
@@ -399,7 +399,7 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
                     matching_log.append("Coordination is not overdue, skipping")
                     continue
             else:  # вечер
-                if deadline.date() >= today_date:
+                if deadline.date() > today_date:
                     debug_info.append({
                         'id': coord_id,
                         'status': 'Not overdue',
@@ -579,7 +579,7 @@ elif menu == "📊 Обработка согласований":
             check_date = st.date_input("Дата проверки", value=datetime.today().date())
             # пункт 5: переключатель утро/вечер
             day_period = st.radio("Время отсечки", ["утро", "вечер"], index=1,
-                                  help="утро – дедлайн СЕГОДНЯ уже считается просроченным; вечер – дедлайн сегодня ещё НЕ просрочен")
+                                  help="утро – дедлайн сегодня ещё НЕ просрочен; вечер – дедлайн сегодня УЖЕ просрочен")
             if st.button("Найти просрочки"):
                 with st.spinner("Анализируем..."):
                     (overdue_counts, overdue_emails, overdue_ids,
