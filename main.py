@@ -605,6 +605,10 @@ elif menu == "📊 Обработка согласований":
                 st.code(report_text, language='text')  # или st.text(report_text)
 
 
+                emails_txt = '\n'.join(sorted(set(overdue_emails)))
+                st.download_button("📥 Скачать список emails", emails_txt, "overdue_emails.txt", "text/plain")
+
+
                 st.download_button(
                     "📥 Скачать отчёт (TXT)",
                     report_text,
