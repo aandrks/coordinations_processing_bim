@@ -480,6 +480,22 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
 
 
 st.set_page_config(page_title="Координации", layout="wide")
+st.markdown(
+    """
+    <style>
+    .version-tag {
+        position: fixed;
+        bottom: 10px;
+        right: 20px;
+        font-size: 12px;
+        color: #aaa;
+        z-index: 9999;
+    }
+    </style>
+    <div class="version-tag">v2.1.0</div>
+    """,
+    unsafe_allow_html=True
+)
 # st.title("📋 Система контроля просроченных согласований 2")
 
 
