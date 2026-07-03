@@ -485,8 +485,8 @@ st.markdown(
     <style>
     .version-tag {
         position: fixed;
-        bottom: 10px;
-        right: 20px;
+        top: 10px;
+        left: 20px;
         font-size: 12px;
         color: #aaa;
         z-index: 9999;
