@@ -590,6 +590,8 @@ elif menu == "📊 Обработка согласований":
                 for d in coordination_details:
                     dd = d['deadline']
                     days_late = (check_date - dd).days if isinstance(dd, date) else (check_date - dd.date()).days
+                    if day_period == 'утро':
+                        days_late = max(0, days_late - 1)
                     for email in d['emails']:
                         person_overdue[email]['count'] += 1
                         person_overdue[email]['overdue_days'].append(days_late)
