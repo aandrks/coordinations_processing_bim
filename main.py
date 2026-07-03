@@ -480,29 +480,14 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
 
 
 st.set_page_config(page_title="Координации", layout="wide")
-st.markdown(
-    """
-    <style>
-    .version-tag {
-        position: fixed;
-        top: 10px;
-        left: 20px;
-        font-size: 12px;
-        color: #aaa;
-        z-index: 9999;
-    }
-    </style>
-    <div class="version-tag">v2.1.0</div>
-    """,
-    unsafe_allow_html=True
-)
+
 # st.title("📋 Система контроля просроченных согласований 2")
 
 
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("Режим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("2.0.5/nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
