@@ -90,20 +90,17 @@ def extract_name_components(name):
     return parts[-1], " ".join(parts[:-1])
 
 def clean_employee_name(name):
-    """Удаляет из имени все токены, совпадающие с элементами списка очистки."""
+    """Удаляет из имени все вхождения строк из списка очистки (без учёта регистра)."""
     if not name or not st.session_state.get('name_cleanup_list'):
         return name
-    # Разделители
-    seps = '-–/\\"\' )('
-    # Заменяем все разделители на пробел и разбиваем
-    for s in seps:
-        name = name.replace(s, ' ')
-    tokens = name.split()
-    # Убираем токены, которые есть в списке очистки (без учёта регистра)
-    cleanup_lower = [item.lower() for item in st.session_state.name_cleanup_list]
-    filtered = [t for t in tokens if t.lower() not in cleanup_lower]
-    result = ' '.join(filtered)
-    return result if result else name
+    for phrase in st.session_state.name_cleanup_list:
+        # Удаляем phrase как подстроку, игнорируя регистр
+        name = re.sub(re.escape(phrase), '', name, flags=re.IGNORECASE)
+    # Убираем возможные сдвоенные пробелы и обрезаем края
+    name = re.sub(r'\s+', ' ', name).strip()
+    # Удаляем оставшиеся разделители по краям
+    name = name.strip(' -/\\"\'')
+    return name if name else name  # если стало пусто, вернём исходное? оставим как есть
 
 
 def parse_company_person_data(file_content, db, public_assignments=None):
