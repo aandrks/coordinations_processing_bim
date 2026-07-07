@@ -94,7 +94,7 @@ def clean_employee_name(name):
     if not name or not st.session_state.get('name_cleanup_list'):
         return name
     # Разделители
-    seps = '–/\\"\' )'
+    seps = '-–/\\"\' )('
     # Заменяем все разделители на пробел и разбиваем
     for s in seps:
         name = name.replace(s, ' ')
