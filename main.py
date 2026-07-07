@@ -324,7 +324,7 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
 
         if len(sorted_emps) == 1 or all_same:
             # Один сотрудник или «работа в паре» (одинаковые показатели)
-            emp_names = ', '.join([f'{e["Сотрудник"]} - "{e["Email"]}"' for e in sorted_emps])
+            emp_names = ', '.join([f'{e["Сотрудник"]} {e["Email"]}"' for e in sorted_emps])
             lines.append(
                 f"Количество просроченных согласований {comp} ({emp_names}) - {data['total']}, "
                 f"макс. срок задержки - {data['max_days']} дня:"
