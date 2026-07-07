@@ -4,3 +4,4 @@ __pycache__/
 !spec_config.json
 raw_txt.txt
 !name_cleanup_list.json
+!company_display_names.json

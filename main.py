@@ -47,6 +47,20 @@ def load_name_cleanup_list():
 if 'name_cleanup_list' not in st.session_state:
     st.session_state.name_cleanup_list = load_name_cleanup_list()
 
+DISPLAY_NAMES_FILE = 'company_display_names.json'
+
+def load_company_display_names():
+    try:
+        if Path(DISPLAY_NAMES_FILE).exists():
+            with open(DISPLAY_NAMES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+if 'company_display_names' not in st.session_state:
+    st.session_state.company_display_names = load_company_display_names()
+
 
 def save_employee_db(db):
     try:
@@ -319,6 +333,10 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
     return False
 
 
+def get_company_display_name(comp):
+    """Возвращает читаемое название компании, если оно есть в словаре, иначе исходное."""
+    names = st.session_state.get('company_display_names', {})
+    return names.get(comp, comp)
 
 
 def generate_company_report(overdue_counts, person_report, overdue_coordination_ids):
@@ -341,6 +359,9 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
     lines.append("")
 
     for comp, data in sorted_companies:
+
+        comp = get_company_display_name(comp)
+
         if data['total'] == 0:
             continue
 
