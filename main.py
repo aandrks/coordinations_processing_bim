@@ -333,10 +333,22 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
     return False
 
 
+
 def get_company_display_name(comp):
     """Возвращает читаемое название компании, если оно есть в словаре, иначе исходное."""
     names = st.session_state.get('company_display_names', {})
     return names.get(comp, comp)
+
+def plural_days(n):
+    if 11 <= n % 100 <= 14:
+        return f"{n} дней"
+    elif n % 10 == 1:
+        return f"{n} день"
+    elif 2 <= n % 10 <= 4:
+        return f"{n} дня"
+    else:
+        return f"{n} дней"
+
 
 
 def generate_company_report(overdue_counts, person_report, overdue_coordination_ids):
@@ -378,16 +390,16 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
             emp_names = ', '.join([f'{e["Сотрудник"]} {e["Email"]}' for e in sorted_emps])
             lines.append(
                 f"Количество просроченных согласований {comp} ({emp_names}) - {data['total']}, "
-                f"макс. срок задержки - {data['max_days']} дня:"
+                f"макс. срок задержки - {plural_days(data['max_days'])}:"
             )
         else:
             # Несколько сотрудников с разными показателями – без имён в заголовке
             lines.append(
                 f"Количество просроченных согласований {comp} - {data['total']}, "
-                f"макс. срок задержки - {data['max_days']} дня:"
+                f"макс. срок задержки - {plural_days(data['max_days'])}:"
             )
             for emp in sorted_emps:
-                lines.append(f"- {emp['Сотрудник']} {emp['Email']} - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
+                lines.append(f"- {emp['Сотрудник']} {emp['Email']} - {emp['Просрочек']} шт. {plural_days(emp['Макс. дней'])}")
 
         lines.append("")
 
