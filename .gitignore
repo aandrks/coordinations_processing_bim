@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 *.json
 !spec_config.json
-raw_txt.txtraw_txt.txt
+raw_txt.txt
