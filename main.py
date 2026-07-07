@@ -297,7 +297,6 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
     companies = defaultdict(lambda: {'total': 0, 'max_days': 0, 'employees': []})
     for p in person_report:
         comp = p['Организация']
-
         companies[comp]['max_days'] = max(companies[comp]['max_days'], p['Макс. дней'])
         companies[comp]['employees'].append(p)
 
@@ -315,16 +314,30 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
         if data['total'] == 0:
             continue
 
-        sorted_emps = sorted(data['employees'], key=lambda x: x['Просрочек'], reverse=True)
+        # Пункты 1,2,3,9: сортировка и условное отображение
+        sorted_emps = sorted(data['employees'],
+                             key=lambda x: (x['Просрочек'], x['Макс. дней']),
+                             reverse=True)
 
-        # пункт 4: вставляем email в заголовок
-        emp_names = ', '.join([f'{e["Сотрудник"]} - "{e["Email"]}"' for e in sorted_emps])
-        lines.append(
-            f"Количество просроченных согласований {comp} ({emp_names}) - {data['total']}, "
-            f"макс. срок задержки - {data['max_days']} дня:"
-        )
-        for emp in sorted_emps:
-            lines.append(f"- {emp['Сотрудник']} - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
+        all_same = (len(set(e['Просрочек'] for e in sorted_emps)) == 1 and
+                    len(set(e['Макс. дней'] for e in sorted_emps)) == 1)
+
+        if len(sorted_emps) == 1 or all_same:
+            # Один сотрудник или «работа в паре» (одинаковые показатели)
+            emp_names = ', '.join([f'{e["Сотрудник"]} - "{e["Email"]}"' for e in sorted_emps])
+            lines.append(
+                f"Количество просроченных согласований {comp} ({emp_names}) - {data['total']}, "
+                f"макс. срок задержки - {data['max_days']} дня:"
+            )
+        else:
+            # Несколько сотрудников с разными показателями – без имён в заголовке
+            lines.append(
+                f"Количество просроченных согласований {comp} - {data['total']}, "
+                f"макс. срок задержки - {data['max_days']} дня:"
+            )
+            for emp in sorted_emps:
+                lines.append(f"- {emp['Сотрудник']} - \"{emp['Email']}\" - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
+
         lines.append("")
 
     return "\n".join(lines)
