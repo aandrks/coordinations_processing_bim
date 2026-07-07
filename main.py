@@ -33,6 +33,20 @@ def load_employee_db():
         st.error(f"Error loading employee database: {e}")
     return {'employees': [], 'companies': set()}
 
+CLEANUP_LIST_FILE = 'name_cleanup_list.json'
+
+def load_name_cleanup_list():
+    try:
+        if Path(CLEANUP_LIST_FILE).exists():
+            with open(CLEANUP_LIST_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+if 'name_cleanup_list' not in st.session_state:
+    st.session_state.name_cleanup_list = load_name_cleanup_list()
+
 
 def save_employee_db(db):
     try:
@@ -75,6 +89,22 @@ def extract_name_components(name):
         return parts[-1], parts[0]
     return parts[-1], " ".join(parts[:-1])
 
+def clean_employee_name(name):
+    """Удаляет из имени все токены, совпадающие с элементами списка очистки."""
+    if not name or not st.session_state.get('name_cleanup_list'):
+        return name
+    # Разделители
+    seps = ' -/\\"\'.'
+    # Заменяем все разделители на пробел и разбиваем
+    for s in seps:
+        name = name.replace(s, ' ')
+    tokens = name.split()
+    # Убираем токены, которые есть в списке очистки (без учёта регистра)
+    cleanup_lower = [item.lower() for item in st.session_state.name_cleanup_list]
+    filtered = [t for t in tokens if t.lower() not in cleanup_lower]
+    result = ' '.join(filtered)
+    return result if result else name
+
 
 def parse_company_person_data(file_content, db, public_assignments=None):
     """
@@ -113,6 +143,7 @@ def parse_company_person_data(file_content, db, public_assignments=None):
                 if not match:
                     continue
                 name, email = match.group(1).strip(), match.group(2).strip()
+                name = clean_employee_name(name)
                 email = re.sub(r'[),.;]+$', '', email).strip()
                 if email in seen_emails:
                     continue
@@ -289,6 +320,8 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
                 return True
     matching_log.append(f"    ✗ No team members found in checked list")
     return False
+
+
 
 
 def generate_company_report(overdue_counts, person_report, overdue_coordination_ids):
