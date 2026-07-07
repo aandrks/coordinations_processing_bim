@@ -336,7 +336,7 @@ def generate_company_report(overdue_counts, person_report, overdue_coordination_
                 f"макс. срок задержки - {data['max_days']} дня:"
             )
             for emp in sorted_emps:
-                lines.append(f"- {emp['Сотрудник']} {emp['Email']}\ - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
+                lines.append(f"- {emp['Сотрудник']} {emp['Email']} - {emp['Просрочек']} шт. {emp['Макс. дней']} дня")
 
         lines.append("")
 
