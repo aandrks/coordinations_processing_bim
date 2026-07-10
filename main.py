@@ -483,7 +483,74 @@ def generate_html_report(overdue_counts, person_report, overdue_coordination_ids
 
     return "\n".join(html_parts)
 
+def generate_html_report1(overdue_counts, person_report, overdue_coordination_ids):
 
+    from collections import defaultdict
+
+
+    # Группировка по компаниям
+    companies = defaultdict(list)
+    for p in person_report:
+        companies[p['Организация']].append(p)
+
+    html_parts = []
+    total_overdue = len(overdue_coordination_ids)
+
+    # Строка с общим количеством – красным целиком
+    html_parts.append(
+        f"<p style='margin:0 0 8px 0; font-size:1.1em; color:red; font-weight:bold;'>"
+        f"Общее количество просроченных согласований - {total_overdue}"
+        f"</p>"
+    )
+
+    # Сортируем компании по убыванию общего количества просрочек
+    sorted_companies = sorted(companies.items(),
+                              key=lambda item: overdue_counts.get(item[0], 0),
+                              reverse=True)
+
+    for comp, employees in sorted_companies:
+        total = overdue_counts.get(comp, 0)
+        if total == 0:
+            continue
+
+        comp_display = get_company_display_name(comp) if 'get_company_display_name' in globals() else comp
+        max_days = max(e['Макс. дней'] for e in employees)
+
+        # Сортируем сотрудников по убыванию (Просрочек, Макс. дней)
+        employees_sorted = sorted(employees,
+                                  key=lambda x: (x['Просрочек'], x['Макс. дней']),
+                                  reverse=True)
+
+        # Группируем сотрудников по (Просрочек, Макс. дней)
+        groups = defaultdict(list)
+        for emp in employees_sorted:
+            key = (emp['Просрочек'], emp['Макс. дней'])
+            groups[key].append(emp['Сотрудник'])
+
+        # Заголовок компании – жирным
+        html_parts.append(
+            f"<p style='margin:6px 0 2px 0; line-height:1.3;'>"
+            f"<b>Количество просроченных согласований {comp_display}</b> - {total}, "
+            f"макс. срок задержки - {plural_days(max_days)}:"
+            f"</p>"
+        )
+
+        # Список сотрудников
+        for (count, max_days_emp), names in groups.items():
+            # Если в группе несколько сотрудников – объединяем имена через " / "
+            if len(names) > 1:
+                names_str = " / ".join(names)
+            else:
+                names_str = names[0]
+            html_parts.append(
+                f"<p style='margin:1px 0 1px 20px; line-height:1.3;'>"
+                f"- {names_str} - {count} шт. {plural_days(max_days_emp)}"
+                f"</p>"
+            )
+
+        html_parts.append("")  # разделитель между компаниями
+
+    return "\n".join(html_parts)
 
 def process_coordinations(df, company_person_map, today_date, day_period='вечер'):
     overdue_counts = defaultdict(int)
@@ -642,7 +709,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v3.3b \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v3.5s \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
@@ -780,14 +847,20 @@ elif menu == "📊 Обработка согласований":
                     df_report.to_excel(writer, index=False, sheet_name='Отчёт')
                 st.download_button("📥 Excel", output.getvalue(), "person_overdue_report.xlsx")
 
-                report_text = generate_company_report(overdue_counts, report, overdue_ids)
-                st.subheader("📊 Сводный отчёт по компаниям и сотрудникам")
-                st.code(report_text, language='text')  # или st.text(report_text)
 
-
-                report_html = generate_html_report(overdue_counts, report, overdue_ids)
+                report_html = generate_html_report1(overdue_counts, report, overdue_ids)
                 st.subheader("📊 Сводный отчёт по компаниям и сотрудникам")
                 st.markdown(report_html, unsafe_allow_html=True)
+
+                report_text = generate_company_report(overdue_counts, report, overdue_ids)
+                st.subheader("")
+                # st.code(report_text, language='text')  # или st.text(report_text)
+
+
+                # report_html = generate_html_report(overdue_counts, report, overdue_ids)
+                # st.subheader("📊 Сводный отчёт по компаниям и сотрудникам2")
+                # st.markdown(report_html, unsafe_allow_html=True)
+
 
 
 
