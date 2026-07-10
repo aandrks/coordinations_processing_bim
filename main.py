@@ -709,7 +709,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v3.5s \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v3.5sb \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
@@ -801,7 +801,7 @@ elif menu == "📊 Обработка согласований":
                 df = pd.read_excel(uploaded_file, engine='openpyxl')
             check_date = st.date_input("Дата проверки", value=datetime.today().date())
             # пункт 5: переключатель утро/вечер
-            day_period = st.radio("Время отсечки", ["утро", "вечер"], index=1,
+            day_period = st.radio("Время отсечки", ["утро", "вечер"], index=0,
                                   help="утро – дедлайн сегодня ещё НЕ просрочен; вечер – дедлайн сегодня УЖЕ просрочен")
             if st.button("Найти просрочки"):
                 with st.spinner("Анализируем..."):
