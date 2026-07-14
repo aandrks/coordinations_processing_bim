@@ -484,9 +484,7 @@ def generate_html_report(overdue_counts, person_report, overdue_coordination_ids
     return "\n".join(html_parts)
 
 def generate_html_report1(overdue_counts, person_report, overdue_coordination_ids):
-
     from collections import defaultdict
-
 
     # Группировка по компаниям
     companies = defaultdict(list)
@@ -521,10 +519,15 @@ def generate_html_report1(overdue_counts, person_report, overdue_coordination_id
                                   key=lambda x: (x['Просрочек'], x['Макс. дней']),
                                   reverse=True)
 
-        # Группируем сотрудников по (Просрочек, Макс. дней)
+        # Группируем по team_id и (Просрочек, Макс. дней)
         groups = defaultdict(list)
         for emp in employees_sorted:
-            key = (emp['Просрочек'], emp['Макс. дней'])
+            team_id = emp.get('team_id', '')
+            if not team_id:
+                # Если team_id нет, используем email как уникальный ключ, чтобы не группировать с другими
+                key = (emp['Email'], emp['Просрочек'], emp['Макс. дней'])
+            else:
+                key = (team_id, emp['Просрочек'], emp['Макс. дней'])
             groups[key].append(emp['Сотрудник'])
 
         # Заголовок компании – жирным
@@ -535,9 +538,8 @@ def generate_html_report1(overdue_counts, person_report, overdue_coordination_id
             f"</p>"
         )
 
-        # Список сотрудников
-        for (count, max_days_emp), names in groups.items():
-            # Если в группе несколько сотрудников – объединяем имена через " / "
+        # Выводим каждую группу
+        for (key, count, max_days_emp), names in groups.items():
             if len(names) > 1:
                 names_str = " / ".join(names)
             else:
@@ -709,7 +711,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v3.5sb \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v3.6b \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
@@ -822,6 +824,7 @@ elif menu == "📊 Обработка согласований":
                     if emp['email'] in person_overdue:
                         person_overdue[emp['email']]['company'] = emp['company']
                         person_overdue[emp['email']]['name'] = emp['name']
+                        person_overdue[emp['email']]['team_id'] = emp.get('team_id', '')
                 report = []
                 for email, data in person_overdue.items():
                     report.append({
@@ -829,7 +832,8 @@ elif menu == "📊 Обработка согласований":
                         'Email': email,
                         'Организация': data['company'] or '—',
                         'Просрочек': data['count'],
-                        'Макс. дней': max(data['overdue_days'])
+                        'Макс. дней': max(data['overdue_days']),
+                        'team_id': data.get('team_id', '')
                     })
                 report.sort(key=lambda x: x['Просрочек'], reverse=True)
                 df_report = pd.DataFrame(report)
