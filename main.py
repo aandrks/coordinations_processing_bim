@@ -434,7 +434,7 @@ def generate_html_report(overdue_counts, person_report, overdue_coordination_ids
 
     # Строка с общим количеством – красным целиком
     html_parts.append(
-        f"<p style='margin:0 0 8px 0; font-size:1.1em; color:red; font-weight:bold;'>"
+        f"<p style='margin:0 0 8px 0; font-size:1.1em; color:red';>"
         f"Общее количество просроченных согласований - {total_overdue}"
         f"</p>"
     )
@@ -466,8 +466,8 @@ def generate_html_report(overdue_counts, person_report, overdue_coordination_ids
             # Разные показатели – имена выносим в список
             html_parts.append(
                 f"<p style='margin:6px 0 2px 0; line-height:1.3;'>"
-                f"<b>Количество просроченных согласований {comp_display}</b> – "
-                f"{data['total']}, "
+                f"<b>Количество просроченных согласований {comp_display} – "
+                f"{data['total']}</b>, "
                 f"макс. срок задержки - {plural_days(data['max_days'])}:"
                 f"</p>"
             )
@@ -496,7 +496,7 @@ def generate_html_report1(overdue_counts, person_report, overdue_coordination_id
 
     # Строка с общим количеством – красным целиком
     html_parts.append(
-        f"<p style='margin:0 0 8px 0; font-size:1.1em; color:red; font-weight:bold;'>"
+        f"<p style='margin:0 0 8px 0; font-size:1.1em; color:red'>"
         f"Общее количество просроченных согласований - {total_overdue}"
         f"</p>"
     )
@@ -533,7 +533,7 @@ def generate_html_report1(overdue_counts, person_report, overdue_coordination_id
         # Заголовок компании – жирным
         html_parts.append(
             f"<p style='margin:6px 0 2px 0; line-height:1.3;'>"
-            f"<b>Количество просроченных согласований {comp_display}</b> - {total}, "
+            f"<b>Количество просроченных согласований {comp_display} - {total}</b>, "
             f"макс. срок задержки - {plural_days(max_days)}:"
             f"</p>"
         )
@@ -711,7 +711,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v3.6b \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v3.7s \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
