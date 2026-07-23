@@ -217,11 +217,20 @@ def find_best_match(target_name, candidates, debug_info=None):
     debug_info.append(f"    Candidates: {[c['name'] for c in candidates]}")
     target_surname, target_given = extract_name_components(target_name)
     debug_info.append(f"    Target surname: {target_surname}, given: {target_given}")
-    target_possible_givens = [target_given]
 
-    for candidate in candidates:
-        if normalize_text(target_surname) != normalize_text(candidate['surname']):
-            continue
+    # 1. Отбираем только кандидатов с той же фамилией (нормализованной)
+    target_surname_norm = normalize_text(target_surname)
+    same_surname_candidates = [
+        c for c in candidates
+        if normalize_text(c['surname']) == target_surname_norm
+    ]
+
+    # Если есть кандидаты с той же фамилией – ищем только среди них
+    search_pool = same_surname_candidates if same_surname_candidates else candidates
+
+    # 2. Сначала пробуем точное совпадение по инициалам
+    target_possible_givens = [target_given]
+    for candidate in search_pool:
         candidate_given_norm = normalize_text(candidate['given_names'])
         for possible_given in target_possible_givens:
             possible_given_norm = normalize_text(possible_given)
@@ -232,14 +241,16 @@ def find_best_match(target_name, candidates, debug_info=None):
                 debug_info.append(f"    Initial-based match: {candidate['name']} ...")
                 return candidate
 
+    # 3. Если не нашли – fuzzy-сравнение внутри отфильтрованного пула
     best_score = 0
     best_match = None
-    for candidate in candidates:
+    for candidate in search_pool:
         score = fuzz.token_set_ratio(normalize_text(target_name), candidate['normalized_name'])
         debug_info.append(f"    Fuzzy score for {candidate['name']}: {score}")
         if score > 65 and score > best_score:
             best_score = score
             best_match = candidate
+
     if best_match:
         debug_info.append(f"    Fuzzy match selected: {best_match['name']} (score: {best_score})")
     else:
