@@ -154,6 +154,8 @@ def parse_company_person_data(file_content, db, public_assignments=None):
                 if not match:
                     continue
                 name, email = match.group(1).strip(), match.group(2).strip()
+                if '-' in name:
+                    name = name.split(' - ')[-1].strip()
                 name = clean_employee_name(name)
                 email = re.sub(r'[),.;]+$', '', email).strip()
                 if email in seen_emails:
@@ -810,7 +812,13 @@ elif menu == "📊 Обработка согласований":
                     (overdue_counts, overdue_emails, overdue_ids,
                      coordination_details, debug_info, ambiguous_matches,
                      matching_log) = process_coordinations(df, company_person_map, check_date, day_period)
-
+                matching_log_text = "\n".join(matching_log)
+                st.download_button(
+                    "📥 Скачать matching_log.txt",
+                    matching_log_text,
+                    "matching_log.txt",
+                    "text/plain"
+                )
                 person_overdue = defaultdict(lambda: {'company': '', 'count': 0, 'overdue_days': []})
                 for d in coordination_details:
                     dd = d['deadline']
