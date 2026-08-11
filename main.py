@@ -326,6 +326,10 @@ def extract_start_date_from_lifecycle(lifecycle_text, current_step_number):
 
 
 def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
+    if not approver_name or approver_name.lower() in ['nan', '']:
+        matching_log.append(f"    Skipping empty/invalid name: {approver_name}")
+        return False
+
     best_match = find_best_match(approver_name, all_people, matching_log)
     if not best_match:
         matching_log.append(f"    No match found for team check: {approver_name}")
@@ -339,6 +343,8 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
     team_members = [p for p in all_people if p.get('team_id') == team_id]
     for team_member in team_members:
         for checked_name in checked_approvers:
+            if not checked_name or checked_name.lower() in ['nan', '']:
+                continue
             if find_best_match(checked_name, [team_member], matching_log):
                 matching_log.append(f"    ✓ Team member {team_member['name']} is already checked")
                 return True
@@ -662,8 +668,13 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
 
         not_checked_text = str(row['Не проверили на текущем шаге'])
         not_checked_approvers = [name.strip() for name in not_checked_text.split(',') if name.strip()]
-        checked_text = str(row['Проверили на текущем шаге'])
-        checked_approvers = [name.strip() for name in checked_text.split(',') if name.strip()]
+
+        checked_raw = row['Проверили на текущем шаге']
+        if pd.isna(checked_raw) or str(checked_raw).lower() in ['nan', '']:
+            checked_approvers = []
+        else:
+            checked_text = str(checked_raw)
+            checked_approvers = [name.strip() for name in checked_text.split(',') if name.strip()]
 
         matching_log.append(f"Not checked approvers: {not_checked_approvers}")
         matching_log.append(f"Checked approvers: {checked_approvers}")
@@ -830,6 +841,26 @@ elif menu == "📊 Обработка согласований":
                     "matching_log.txt",
                     "text/plain"
                 )
+                if no_match_array:
+                    no_match_text = "\n".join(sorted(set(no_match_array)))
+                    st.download_button(
+                        "📥 Скачать список нераспознанных имён (no_match.txt)",
+                        no_match_text,
+                        "no_match_employees.txt",
+                        "text/plain"
+                    )
+                else:
+                    st.info("✅ Все имена были успешно распознаны.")
+
+                if coordination_details:
+                    df_details = pd.DataFrame(coordination_details)
+                    csv_details = df_details.to_csv(index=False).encode('utf-8-sig')
+                    st.download_button(
+                        "📥 Скачать детали согласований (CSV)",
+                        csv_details,
+                        "coordination_details.csv",
+                        "text/csv"
+                    )
                 person_overdue = defaultdict(lambda: {'company': '', 'count': 0, 'overdue_days': []})
                 for d in coordination_details:
                     dd = d['deadline']
