@@ -3,3 +3,4 @@ rapidfuzz>=3.0
 openpyxl>=3.0
 xlsxwriter>=3.0
 pandas>=1.5
+st-gsheets-connection>=0.1.0
