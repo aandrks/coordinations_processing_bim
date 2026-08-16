@@ -276,6 +276,23 @@ def add_working_days(start_date, working_days):
     return current_date
 
 
+def count_working_days_between(start_date, end_date):
+    """Рабочие дни строго после start_date и включая end_date (праздники учтены)."""
+    if end_date <= start_date:
+        return 0
+    count = 0
+    current = start_date
+    while current < end_date:
+        current += timedelta(days=1)
+        monthday = current.strftime("%d-%m")
+        is_weekday = current.weekday() < 5
+        is_holiday = monthday in holidays
+        is_working_holiday = monthday in working_holidays
+        if (is_weekday and not is_holiday) or is_working_holiday:
+            count += 1
+    return count
+
+
 def load_spec_config():
     try:
         if Path(SPEC_CONFIG_FILE).exists():
@@ -697,11 +714,11 @@ def process_coordinations(df, company_person_map, today_date, day_period='веч
             else:
                 matching_log.append(f"    No match found for: {approver_name}")
                 no_match_array.append(approver_name)
-
-        for company in coord_companies:
-            overdue_counts[company] += 1
-        overdue_emails.extend(coord_emails)
-        overdue_coordination_ids.append(coord_id)
+        if coord_companies:
+            for company in coord_companies:
+                overdue_counts[company] += 1
+            overdue_emails.extend(coord_emails)
+            overdue_coordination_ids.append(coord_id)
 
         coordination_details.append({
             'id': coord_id,
@@ -865,9 +882,9 @@ elif menu == "📊 Обработка согласований":
                 person_overdue = defaultdict(lambda: {'company': '', 'count': 0, 'overdue_days': []})
                 for d in coordination_details:
                     dd = d['deadline']
-                    days_late = (check_date - dd).days if isinstance(dd, date) else (check_date - dd.date()).days
+                    days_late = count_working_days_between(dd, check_date)
                     if day_period == 'утро':
-                        days_late = max(0, days_late - 1)
+                        days_late = max(0, days_late)
                     for email in d['emails']:
                         person_overdue[email]['count'] += 1
                         person_overdue[email]['overdue_days'].append(days_late)
