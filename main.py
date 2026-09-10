@@ -228,18 +228,18 @@ def find_best_match(target_name, candidates, debug_info=None):
     # Если есть кандидаты с той же фамилией – ищем только среди них
     search_pool = same_surname_candidates if same_surname_candidates else candidates
 
-    # 2. Сначала пробуем точное совпадение по инициалам
-    target_possible_givens = [target_given]
-    for candidate in search_pool:
-        candidate_given_norm = normalize_text(candidate['given_names'])
-        for possible_given in target_possible_givens:
-            possible_given_norm = normalize_text(possible_given)
-            if candidate_given_norm.startswith(possible_given_norm):
-                debug_info.append(f"    Initial-based match: {candidate['name']} ...")
-                return candidate
-            if possible_given_norm.startswith(candidate_given_norm):
-                debug_info.append(f"    Initial-based match: {candidate['name']} ...")
-                return candidate
+    # # 2. Сначала пробуем точное совпадение по инициалам
+    # target_possible_givens = [target_given]
+    # for candidate in search_pool:
+    #     candidate_given_norm = normalize_text(candidate['given_names'])
+    #     for possible_given in target_possible_givens:
+    #         possible_given_norm = normalize_text(possible_given)
+    #         if candidate_given_norm.startswith(possible_given_norm):
+    #             debug_info.append(f"    Initial-based match: {candidate['name']} ...")
+    #             return candidate
+    #         if possible_given_norm.startswith(candidate_given_norm):
+    #             debug_info.append(f"    Initial-based match: {candidate['name']} ...")
+    #             return candidate
 
     # 3. Если не нашли – fuzzy-сравнение внутри отфильтрованного пула
     best_score = 0
@@ -574,6 +574,7 @@ def generate_html_report1(overdue_counts, person_report, overdue_coordination_id
     return "\n".join(html_parts)
 
 def process_coordinations(df, company_person_map, today_date, day_period='вечер'):
+    no_match_array.clear()
     overdue_counts = defaultdict(int)
     overdue_emails = []
     overdue_coordination_ids = []
@@ -735,7 +736,7 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v5.0b \nРежим", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v5.1s \n", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
@@ -900,6 +901,16 @@ elif menu == "📊 Обработка согласований":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df_report.to_excel(writer, index=False, sheet_name='Отчёт')
                 st.download_button("📥 Excel", output.getvalue(), "person_overdue_report.xlsx")
+
+                if no_match_array:
+                    unique_no_match = sorted(set(no_match_array))
+                    st.warning(
+                        f"⚠️ Не найдено совпадений для {len(unique_no_match)} "
+                        f"{'имени' if len(unique_no_match) == 1 else 'имён'}. "
+                        f"Эти люди не привязаны ни к одной компании "
+                        f"и не учтены в сводном отчёте:"
+                    )
+                    st.code('\n'.join(unique_no_match), language='text')
 
 
                 report_html = generate_html_report1(overdue_counts, report, overdue_ids)
