@@ -47,16 +47,20 @@ def load_name_cleanup_list():
 if 'name_cleanup_list' not in st.session_state:
     st.session_state.name_cleanup_list = load_name_cleanup_list()
 
-DISPLAY_NAMES_FILE = 'company_display_names.json'
-
 def load_company_display_names():
     try:
-        if Path(DISPLAY_NAMES_FILE).exists():
-            with open(DISPLAY_NAMES_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return {}
+        csv_url = st.secrets["company_mapping"]["csv_url"]
+        df = pd.read_csv(csv_url)
+        df.columns = [c.strip().lower() for c in df.columns]
+        return {
+            str(r['email_prefix']).strip().lower(): str(r['company_name']).strip()
+            for _, r in df.iterrows()
+            if str(r.get('email_prefix', '')).strip() and str(r.get('company_name', '')).strip()
+        }
+    except Exception as e:
+        st.warning(f"Не удалось загрузить справочник: {e}")
+        return {}
+
 
 if 'company_display_names' not in st.session_state:
     st.session_state.company_display_names = load_company_display_names()
@@ -371,9 +375,11 @@ def is_team_checked(approver_name, all_people, checked_approvers, matching_log):
 
 
 def get_company_display_name(comp):
-    """Возвращает читаемое название компании, если оно есть в словаре, иначе исходное."""
     names = st.session_state.get('company_display_names', {})
-    return names.get(comp, comp)
+    replacement = names.get(str(comp).lower())
+    if replacement and len(str(replacement).strip()) >= 1:
+        return replacement
+    return comp
 
 def plural_days(n):
     if 11 <= n % 100 <= 14:
@@ -753,10 +759,11 @@ st.set_page_config(page_title="Координации", layout="wide")
 if 'employee_db' not in st.session_state:
     st.session_state.employee_db = {'employees': [], 'companies': set()}
 
-menu = st.sidebar.radio("v5.5b \n", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
+menu = st.sidebar.radio("v6.1b \n", ["🏢 Загрузка данных", "📊 Обработка согласований", "📂 Загрузить JSON"])
 
 if menu == "🏢 Загрузка данных":
     st.header("Загрузка сотрудников")
+    st.write("Для изменения словаря компаний отредактируйте таблицу по ссылке: https://clck.ru/3W82YY")
     db = st.session_state.employee_db
     st.write(f"В базе {len(db['employees'])} сотрудников, {len(db['companies'])} компаний")
 
