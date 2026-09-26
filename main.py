@@ -52,11 +52,18 @@ def load_company_display_names():
         csv_url = st.secrets["company_mapping"]["csv_url"]
         df = pd.read_csv(csv_url)
         df.columns = [c.strip().lower() for c in df.columns]
-        return {
-            str(r['email_prefix']).strip().lower(): str(r['company_name']).strip()
-            for _, r in df.iterrows()
-            if str(r.get('email_prefix', '')).strip() and str(r.get('company_name', '')).strip()
-        }
+
+        mapping = {}
+        for _, r in df.iterrows():
+            prefix = r.get('email_prefix')
+            name = r.get('company_name')
+            if pd.isna(prefix) or pd.isna(name):
+                continue
+            prefix = str(prefix).strip().lower()
+            name = str(name).strip()
+            if prefix and name and name.lower() != 'nan':
+                mapping[prefix] = name
+        return mapping
     except Exception as e:
         st.warning(f"Не удалось загрузить справочник: {e}")
         return {}
